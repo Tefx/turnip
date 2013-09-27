@@ -2,13 +2,14 @@ from uuid import uuid1
 import json
 import posixpath
 import os
+import cStringIO
 
 class FileSystemBase(object):
 
 	def uupdate(self, uuid, f):
 		pass
 
-	def uget(self, uuid, f=None):
+	def uget(self, uuid, f):
 		pass
 
 	def udelete(self, uuid):
@@ -18,18 +19,24 @@ class FileSystemBase(object):
 		pass
 
 	def uupdate_r(self, uuid, f):
+		if not hasattr(f, "read"):
+			if not isinstance(f, basestring):
+				f = json.dumps(f)
+			f = cStringIO.StringIO(f)
 		if hasattr(self, "before_uupdate"):
 			uuid, f = self.before_uupdate(uuid, f)
 		return self.uupdate(uuid, f)
 
-	def uget_r(self, uuid, f=None):
+	def uget_r(self, uuid, outf=None):
+		if not outf:
+			f = cStringIO.StringIO()
+		else:
+			f = outf
 		if hasattr(self, "before_uget"):
 			uuid, f = self.before_uget(uuid, f)
-		buf = self.uget(uuid, f)
-		if hasattr(self, "after_uget"):
-			return self.after_uget(buf)
-		else:
-			return buf
+		self.uget(uuid, f)
+		if not outf:
+			return f.getvalue()
 
 	def mknod(self, path, isdir=False):
 		if path == "/":
@@ -59,10 +66,11 @@ class FileSystemBase(object):
 		return self.ulist(uuid, info)
 
 	def ulist(self, uuid, info=False):
+		meta = self.uget_r(uuid)
 		if not info:
-			return json.loads(self.uget_r(uuid))["contents"].keys()
+			return json.loads(meta)["contents"].keys()
 		else:
-			return json.loads(self.uget_r(uuid))["contents"].items()
+			return json.loads(meta)["contents"].items()
 
 	def isdir(self, path):
 		return self.get_uuid(path)[-4:] == ".dir"
@@ -91,24 +99,8 @@ class FileSystemBase(object):
 	def update(self, path, f):
 		return self.uupdate_r(self.get_uuid(path), f)
 
-	# def uupdate_r(self, uuid, f):
-	# 	with open(uuid, "w") as outf:
-	# 		if hasattr(f, "read"):
-	# 			outf.write(f.read())
-	# 		elif not isinstance(f, basestring):
-	# 			outf.write(json.dumps(f))
-	# 		else:
-	# 			outf.write(f)
-
 	def get(self, path, f=None):
 		return self.uget_r(self.get_uuid(path), f)
-
-	# def uget_r(self, uuid, f=None):
-	# 	with open(uuid) as inf:
-	# 		if f:
-	# 			f.write(inf.read())
-	# 		else:
-	# 			return inf.read()
 
 	def get_uuid(self, path):
 		if path == "/":

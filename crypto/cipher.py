@@ -1,6 +1,7 @@
 from Crypto.Cipher import AES
 from Crypto.Util import Counter
 from Crypto.Hash import SHA256
+import json
 
 import sys; sys.path.append("../filesystem"); import filesystem
 
@@ -14,14 +15,14 @@ class AESWrapper(object):
 	def close(self):
 		self.fp.close()
 
-	def read(size=-1):
+	def read(self, size=-1):
 		buf = self.fp.read(size)
 		if not self.read_cipher:
 			ctr = Counter.new(128)
 			self.read_cipher = AES.new(self.key, AES.MODE_CTR, counter=ctr)
 		return self.read_cipher.encrypt(buf)
 
-	def write(buf):
+	def write(self, buf):
 		if not self.write_cipher:
 			ctr = Counter.new(128)
 			self.write_cipher = AES.new(self.key, AES.MODE_CTR, counter=ctr)
@@ -29,25 +30,24 @@ class AESWrapper(object):
 
 class CryptoFilter(filesystem.FSFilter):
 	def __init__(self, password):
-		super(CryptoFilter, self).__init__()
+		filesystem.FSFilter.__init__(self)
 		h = SHA256.new(password)
 		bytes = h.digest()
 		self.key = bytes[AES.block_size:]
 
 	def before_uupdate(self, uuid, f):
-		return uuid, AESWrapper(f, self.key)
-
-	def before_uget(self, uuid, f):
-		if f != None:
+		if hasattr(f, "read"):
 			return uuid, AESWrapper(f, self.key)
-		else:
-			return uuid, None
-
-	def after_uget(self, buf=None):
-		if buf:
+		elif not isinstance(f, basestring):
 			ctr = Counter.new(128)
 			cipher = AES.new(self.key, AES.MODE_CTR, counter=ctr)
-			return cipher.encrypt(buf)
+			return uuid, cipher.encrypt(json.dumps(f))
 		else:
-			return buf
+			ctr = Counter.new(128)
+			cipher = AES.new(self.key, AES.MODE_CTR, counter=ctr)
+			return uuid, cipher.encrypt(f)
+
+	def before_uget(self, uuid, f):
+		return uuid, AESWrapper(f, self.key)
+
 

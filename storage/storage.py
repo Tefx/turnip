@@ -27,6 +27,20 @@ class StorageBase(object):
 	def delete_object(self, bucket, name):
 		pass
 
+	def get_object(self, bucket, name=None):
+		if not name:
+			for obj in self.list_buckets():
+				if obj.name == bucket:
+					return obj
+		else:
+			for obj in self.list_objects(bucket):
+				if obj.name == name:
+					return obj
+		return None
+
+	def exists(self, bucket, name=None): 
+		return self.get_object(bucket, name) != None  
+
 class DiskStorageBase(StorageBase):
 	def _check_error(self, resp):
 		return resp

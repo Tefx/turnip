@@ -15,20 +15,12 @@ class LocalFileSystem(FileSystemBase):
 	def uupdate(self, uuid, f):
 		path = os.path.join(self.root, uuid)
 		with open(path, "w") as outf:
-			if hasattr(f, "read"):
-				outf.write(f.read())
-			elif not isinstance(f, basestring):
-				outf.write(json.dumps(f))
-			else:
-				outf.write(f)
+			outf.write(f.read())
 
-	def uget(self, uuid, f=None):
+	def uget(self, uuid, f):
 		path = os.path.join(self.root, uuid)
 		with open(path) as inf:
-			if f:
-				f.write(inf.read())
-			else:
-				return inf.read()
+			f.write(inf.read())
 
 	def udelete(self, uuid):
 		path = os.path.join(self.root, uuid)

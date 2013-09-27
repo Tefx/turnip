@@ -14,18 +14,10 @@ class ZipFileSystem(FileSystemBase):
 			return False
 
 	def uupdate(self, uuid, f):
-		if hasattr(f, "read"):
-			self.zip.writestr(uuid, f.read())
-		elif not isinstance(f, basestring):
-			self.zip.writestr(uuid, json.dumps(f))
-		else:
-			self.zip.writestr(uuid, f)
+		self.zip.writestr(uuid, f.read())
 
-	def uget(self, uuid, f=None):
-		if f:
-			f.write(self.zip.read(uuid))
-		else:
-			return self.zip.read(uuid)
+	def uget(self, uuid, f):
+		f.write(self.zip.read(uuid))
 
 	def udelete(self, uuid):
 		pass

@@ -2,7 +2,7 @@ import storage
 import os
 import shutil
 
-class LocalStroage(storage.DiskStorageBase):
+class LocalStorage(storage.DiskStorageBase):
 	def free(self):
 		st = os.statvfs(path)
 		return st.f_bavail * st.f_frsize
