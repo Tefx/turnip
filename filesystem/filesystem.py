@@ -5,6 +5,8 @@ import os
 import cStringIO
 
 class FileSystemBase(object):
+	def __init__(self):
+		self.dir_cache = {}
 
 	def uupdate(self, uuid, f):
 		pass
@@ -18,16 +20,28 @@ class FileSystemBase(object):
 	def uexists(self, uuid):
 		pass
 
-	def uupdate_r(self, uuid, f):
+	def sync(self):
+		for d, v in self.dir_cache.iteritems():
+			self.uupdate_r(d, v, False)
+		self.dir_cache = {}
+
+	def uupdate_r(self, uuid, f, caching=True):
 		if not hasattr(f, "read"):
 			if not isinstance(f, basestring):
 				f = json.dumps(f)
 			f = cStringIO.StringIO(f)
-		if hasattr(self, "before_uupdate"):
-			uuid, f = self.before_uupdate(uuid, f)
-		return self.uupdate(uuid, f)
+		if uuid[-4:] == ".dir" and caching:
+			self.dir_cache[uuid] = f.read()
+		else:
+			if hasattr(self, "before_uupdate"):
+				uuid, f = self.before_uupdate(uuid, f)
+			self.uupdate(uuid, f)
+			if hasattr(self, "after_uupdate"):
+				uuid, f = self.after_uupdate(uuid, f)
 
 	def uget_r(self, uuid, outf=None):
+		if uuid[-4:] == ".dir" and uuid in self.dir_cache:
+				return self.dir_cache[uuid]
 		if not outf:
 			f = cStringIO.StringIO()
 		else:
@@ -35,8 +49,13 @@ class FileSystemBase(object):
 		if hasattr(self, "before_uget"):
 			uuid, f = self.before_uget(uuid, f)
 		self.uget(uuid, f)
+		if hasattr(self, "after_uget"):
+			uuid, f = self.after_uget(uuid, f)
 		if not outf:
-			return f.getvalue()
+			buf = f.getvalue()
+			if uuid[-4:] == ".dir":
+				self.dir_cache[uuid] = buf
+			return buf
 
 	def mknod(self, path, isdir=False):
 		if path == "/":
@@ -150,6 +169,7 @@ class FileSystemBase(object):
 					self.mknod(path)
 				with open(os.path.join(local_root, f)) as inf:
 					self.update(path, inf)
+		self.sync()
 
 	def copy_to_local(self, path, local_path):
 		for root, dirs, files in self.walk(path):

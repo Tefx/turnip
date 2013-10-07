@@ -4,6 +4,7 @@ import json
 
 class LocalFileSystem(FileSystemBase):
 	def __init__(self, store_location):
+		FileSystemBase.__init__(self)
 		self.root = store_location
 		if not os.path.exists(self.root):
 			os.mkdir(self.root)

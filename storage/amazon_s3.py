@@ -15,6 +15,7 @@ class AmazonS3(storage.StorageBase):
 		bucket = self.s3.get_bucket(bucket)
 		k = Key(bucket)
 		k.key = name
+		print "uploading:", bucket, name
 		k.set_contents_from_file(infile)
 
 	def download(self, bucket, name, outfile):
@@ -23,6 +24,7 @@ class AmazonS3(storage.StorageBase):
 		bucket = self.s3.get_bucket(bucket)
 		k = Key(bucket)
 		k.key = name
+		print "downloading:", bucket, name
 		k.get_contents_to_file(outfile)
 
 	def list_objects(self, bucket):
@@ -52,6 +54,7 @@ class AmazonS3(storage.StorageBase):
 		if isinstance(bucket, storage.Bucket):
 			bucket = bucket.name
 		bucket = self.s3.get_bucket(bucket)
+		print "deleting:", bucket, name
 		bucket.delete_key(name)
 
 if __name__ == '__main__':

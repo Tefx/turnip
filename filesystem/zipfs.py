@@ -4,6 +4,7 @@ import zipfile
 
 class ZipFileSystem(FileSystemBase):
 	def __init__(self, f):
+		FileSystemBase.__init__(self)
 		self.zip = zipfile.ZipFile(f, "w")
 
 	def uexists(self, uuid):

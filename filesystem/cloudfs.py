@@ -1,11 +1,14 @@
 import filesystem
+import cStringIO
 
 class CloudFileSystem(filesystem.FileSystemBase):
 	def __init__(self, storage, bucket):
+		filesystem.FileSystemBase.__init__(self)
 		self.storage = storage
 		if not self.storage.exists(bucket):
 			self.storage.create_bucket(bucket)
 		self.bucket = bucket
+		self.dir_buf = {}
 
 	def uupdate(self, uuid, f):
 		self.storage.upload(f, self.bucket, uuid)
@@ -18,18 +21,3 @@ class CloudFileSystem(filesystem.FileSystemBase):
 
 	def uexists(self, uuid):
 		return self.storage.exists(self.bucket, uuid)
-
-
-if __name__ == '__main__':
-	import sys; sys.path.append("../")
-	from storage import LocalStorage
-
-	conf = {
-		'root': './'
-	}
-	fs = CloudFileSystem(LocalStorage(conf), "root")
-	fs.copy_from_local("../../DFC", "/")
-	fs.copy_to_local("/", "../../test")
-	# for path, dirs, files in fs.walk("/"):
-	# 	print path, dirs, files
-	fs.delete("/")

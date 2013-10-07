@@ -81,6 +81,7 @@ class DiskStorageBase(StorageBase):
 		if isinstance(bucket, Bucket):
 			bucket = bucket.name
 		path = self.root + "/".join([bucket, name])
+		print "uploading:", path
 		resp = self._upload(infile, path)
 		self._check_error(resp)
 
@@ -88,6 +89,7 @@ class DiskStorageBase(StorageBase):
 		if isinstance(bucket, Bucket):
 			bucket = bucket.name
 		path = self.root + "/".join([bucket, name])
+		print "downloading:", path
 		self._download(path, outfile)
 
 	def _list(self, path, follow_dir=True):
@@ -130,6 +132,7 @@ class DiskStorageBase(StorageBase):
 		if isinstance(bucket, Bucket):
 			bucket = bucket.name
 		path = self.root + "/".join([bucket, name])
+		print "deleting:", path
 		self._delete(path)
 
 class ObjectOrBucket(object):

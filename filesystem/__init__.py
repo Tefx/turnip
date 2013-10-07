@@ -1,3 +1,4 @@
 from filesystem import FileSystemBase, FSFilter
-import localfs
-import zipfs
+from localfs import LocalFileSystem
+from zipfs import ZipFileSystem
+from cloudfs import CloudFileSystem
