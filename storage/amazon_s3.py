@@ -3,34 +3,38 @@ from boto.s3.connection import S3Connection
 from boto.s3.connection import Location
 from boto.s3.key import Key
 
+MAX_BUCKET_CACHE = 1000000
+
 class AmazonS3(storage.StorageBase):
 	def __init__(self, *args):
 		super(AmazonS3, self).__init__(*args)
 		self.s3 = S3Connection(self.config["access_key_id"], self.config["secret_access_key"])
 		self.location = getattr(Location, self.config["location"])
+		self.bucket_cache = {}
 
-	def upload(self, infile, bucket, name):
+	def _get_bucket(self, bucket):
 		if isinstance(bucket, storage.Bucket):
 			bucket = bucket.name
-		bucket = self.s3.get_bucket(bucket)
+		if bucket not in self.bucket_cache:
+			if len(self.bucket_cache) > MAX_BUCKET_CACHE:
+				self.bucket_cache = {}
+			self.bucket_cache[bucket] = self.s3.get_bucket(bucket)
+		return self.bucket_cache[bucket]
+
+	def upload(self, infile, bucket, name):
+		bucket = self._get_bucket(bucket)
 		k = Key(bucket)
 		k.key = name
-		print "uploading:", bucket, name
 		k.set_contents_from_file(infile)
 
 	def download(self, bucket, name, outfile):
-		if isinstance(bucket, storage.Bucket):
-			bucket = bucket.name
-		bucket = self.s3.get_bucket(bucket)
+		bucket = self._get_bucket(bucket)
 		k = Key(bucket)
 		k.key = name
-		print "downloading:", bucket, name
 		k.get_contents_to_file(outfile)
 
 	def list_objects(self, bucket):
-		if isinstance(bucket, storage.Bucket):
-			bucket = bucket.name
-		bucket = self.s3.get_bucket(bucket)
+		bucket = self._get_bucket(bucket)
 		for key in bucket.list():
 			yield storage.Object(self, {"name":key.key, "bucket":bucket.name})
 
@@ -43,18 +47,13 @@ class AmazonS3(storage.StorageBase):
 		return storage.Bucket(self, {"name":name})
 
 	def delete_bucket(self, name):
-		if isinstance(name, storage.Bucket):
-			name = name.name
-		bucket = self.s3.get_bucket(name)
+		bucket = self._get_bucket(bucket)
 		for key in bucket.list():
 			key.delete()
 		self.s3.delete_bucket(name)
 
 	def delete_object(self, bucket, name):
-		if isinstance(bucket, storage.Bucket):
-			bucket = bucket.name
-		bucket = self.s3.get_bucket(bucket)
-		print "deleting:", bucket, name
+		bucket = self._get_bucket(bucket)
 		bucket.delete_key(name)
 
 if __name__ == '__main__':

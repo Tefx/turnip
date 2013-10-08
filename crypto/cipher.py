@@ -53,21 +53,25 @@ class CryptoFilter(filesystem.FSFilter):
 		self.after_uupdate = self.after
 
 	def before_uupdate(self, uuid, f):
+		if uuid[-4:] == ".dir":
+			return uuid, f
 		if hasattr(f, "read"):
 			return uuid, AESWrapper(f, self.key)
 		elif not isinstance(f, basestring):
-			ctr = Counter.new(128)
-			cipher = AES.new(self.key, AES.MODE_CTR, counter=ctr)
+			cipher = AES.new(self.key, AES.MODE_CTR, counter=Counter.new(128))
 			return uuid, cipher.encrypt(json.dumps(f))
 		else:
-			ctr = Counter.new(128)
-			cipher = AES.new(self.key, AES.MODE_CTR, counter=ctr)
+			cipher = AES.new(self.key, AES.MODE_CTR, counter=Counter.new(128))
 			return uuid, cipher.encrypt(f)
 
 	def before_uget(self, uuid, f):
+		if uuid[-4:] == ".dir":
+			return uuid, f
 		return uuid, AESWrapper(f, self.key)
 
 	def after(self, uuid, f):
+		if uuid[-4:] == ".dir":
+			return uuid, f
 		return uuid, f.fp
 
 if __name__ == '__main__':

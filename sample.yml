@@ -1,0 +1,51 @@
+---
+Storages:
+  - type: BaiduPCS
+    root: /apps/COC/
+    access_token: ACCESS_TOKEN
+    refresh_token: REFRESH_TOKEN
+    bucket: BUCKETPCS
+  - type: AmazonS3
+    location: APNortheast
+    access_key_id: ACCESS_KEY_ID
+    secret_access_key: SECRET_ACCESS_KEY
+    bucket: BUCKETapnortheast
+  - type: AmazonS3
+    location: APSoutheast
+    access_key_id: ACCESS_KEY_ID
+    secret_access_key: SECRET_ACCESS_KEY
+    bucket: BUCKETapsoutheast
+  - type: AmazonS3
+    location: APSoutheast2
+    access_key_id: ACCESS_KEY_ID
+    secret_access_key: SECRET_ACCESS_KEY
+    bucket: BUCKETapsoutheast2
+  - type: AmazonS3
+    location: SAEast
+    access_key_id: ACCESS_KEY_ID
+    secret_access_key: SECRET_ACCESS_KEY
+    bucket: BUCKETsaeast
+  - type: Dropbox
+    id: dropbox
+    root: /
+    access_token: ACCESS_TOKEN
+    user_id: 4510639
+  - type: LocalStorage
+    root: /Users/zzm/Desktop/turnip/test/root/
+    bucket: tefxzzmroottest_0
+    quota: 1000000000
+  - type: LocalStorage
+    root: /Users/zzm/Desktop/turnip/test/root/
+    bucket: tefxzzmroottest_1
+    quota: 1000000000
+  - type: LocalStorage
+    root: /Users/zzm/Desktop/turnip/test/root/
+    bucket: tefxzzmroottest_2
+    quota: 1000000000
+
+Encryption:
+    key: PASSWORD
+
+RSCoding:
+    k: 7
+    m: 9

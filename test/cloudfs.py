@@ -12,10 +12,10 @@ def test():
 
 	storages = config.Config("../config.yml").gen_storages()
 	# fs = CloudFileSystem(storages["dropbox"], "tefxzzmroottest")
-	fs = CryptoCloudFS(storages["dropbox"], "tefxzzmroottest", "88580323")
+	fs = CryptoCloudFS(storages["s3"], "tefxzzmroottest", "88580323")
 	fs.copy_from_local("../../drive", "/")
 	fs.copy_to_local("/", "../../test")
-	fs.delete("/")
+	# fs.delete("/")
 
 if __name__ == '__main__':
 	test()

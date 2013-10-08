@@ -4,8 +4,8 @@ import shutil
 
 class LocalStorage(storage.DiskStorageBase):
 	def free(self):
-		st = os.statvfs(path)
-		return st.f_bavail * st.f_frsize
+		st = os.statvfs(self.root)
+		return min(self.config["quota"], st.f_bavail * st.f_frsize)
 
 	def _upload(self, infile, path):
 		path = path.replace("/", os.path.sep)

@@ -1,4 +1,4 @@
-from uuid import uuid1
+import hashlib
 import json
 import posixpath
 import os
@@ -7,6 +7,10 @@ import cStringIO
 class FileSystemBase(object):
 	def __init__(self):
 		self.dir_cache = {}
+
+	def mkfs(self):
+		if not self.exists("/"):
+			self.mknod("/", True)
 
 	def uupdate(self, uuid, f):
 		pass
@@ -58,10 +62,12 @@ class FileSystemBase(object):
 			return buf
 
 	def mknod(self, path, isdir=False):
+		if self.exists(path):
+			return
 		if path == "/":
 			self.uupdate_r("root.dir", {"contents":{}, "path":path})
 			return
-		uuid = uuid1().hex
+		uuid = hashlib.sha256(path).hexdigest()
 		if isdir:
 			uuid = uuid + ".dir"
 		up, name = posixpath.split(path)
@@ -116,9 +122,11 @@ class FileSystemBase(object):
 			yield r, d, f
 
 	def update(self, path, f):
+		print ">>>updating:", path
 		return self.uupdate_r(self.get_uuid(path), f)
 
 	def get(self, path, f=None):
+		print "<<<getting:", path
 		return self.uget_r(self.get_uuid(path), f)
 
 	def get_uuid(self, path):
@@ -142,24 +150,27 @@ class FileSystemBase(object):
 		if uuid[-4:] == ".dir":
 			d = json.loads(self.uget_r(uuid))
 			for k,v in d["contents"].iteritems():
+				print "===deleting:", k
 				self._udelete(v["uuid"])
 		self.udelete(uuid)
 
 	def delete(self, path):
+		print "===deleting:", path
 		uuid = self.get_uuid(path)
 		self._udelete(uuid)
 		if uuid != "root.dir":
-			up, name = os.path.posixpath(path)
+			up, name = posixpath.split(path)
 			upuuid = self.get_uuid(up)
 			d = json.loads(self.uget_r(upuuid))
-			if name not in d[name]:
+			if name in d["contents"]:
 				del d["contents"][name]
 			self.uupdate_r(upuuid, json.dumps(d))
 
 	def copy_from_local(self, local_path, path):
 		len_base = len(os.path.abspath(local_path))+1
+		dest_path = path
 		for local_root, dirs, files in os.walk(local_path, True):
-			root = "/" + os.path.abspath(local_root)[len_base:]
+			root = posixpath.join(dest_path, os.path.abspath(local_root)[len_base:])
 			root = root.replace(os.path.sep, "/")
 			if not self.exists(root):
 				self.mknod(root, True)
